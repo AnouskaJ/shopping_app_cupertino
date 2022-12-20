@@ -269,9 +269,8 @@ class ShoppingCartItem extends StatelessWidget {
           children: <Widget>[
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: Image.asset(
-                product.assetName,
-                package: product.assetPackage,
+              child: Image.network(
+                product.imageUrl,
                 fit: BoxFit.cover,
                 width: 40,
                 height: 40,
@@ -295,6 +294,14 @@ class ShoppingCartItem extends StatelessWidget {
                           formatter.format(quantity * product.price),
                           style: Styles.productRowItemName,
                         ),
+                        CupertinoButton(
+                          child: Icon(CupertinoIcons.delete),
+                          onPressed: () {
+                            final model = Provider.of<AppStateModel>(context,
+                                listen: false);
+                            model.removeItemFromCart(product.id);
+                          },
+                        )
                       ],
                     ),
                     const SizedBox(

@@ -12,13 +12,15 @@ class Product {
     required this.isFeatured,
     required this.name,
     required this.price,
+    required this.imageUrl,
   });
 
   final Category category;
-  final int id;
+  final String id;
   final bool isFeatured;
   final String name;
-  final int price;
+  final double price;
+  final String imageUrl;
 
   String get assetName => '$id-0.jpg';
   String get assetPackage => 'shrine_images';

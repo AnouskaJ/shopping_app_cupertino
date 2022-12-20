@@ -1,29 +1,57 @@
+import 'dart:developer';
+
 import 'package:flutter/foundation.dart' as foundation;
 
 import 'product.dart';
-import 'products_repository.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert' as convert;
 
 double _salesTaxRate = 0.06;
 double _shippingCostPerItem = 7;
 
 class AppStateModel extends foundation.ChangeNotifier {
   // All the available products.
-  List<Product> _availableProducts = [];
+  final List<Product> _availableProducts = [];
 
   // The currently selected category of products.
   Category _selectedCategory = Category.all;
 
   // The IDs and quantities of products currently in the cart.
-  final _productsInCart = <int, int>{};
+  final _productsInCart = <String, int>{};
 
-  Map<int, int> get productsInCart {
+  Map<String, int> get productsInCart {
     return Map.from(_productsInCart);
   }
 
-  // The IDs and quantities of products currently in the favourites.
-  final _productsInFavourites = <int, int>{};
+  void loadProducts() async {
+    try {
+      final res = await http.get(
+        Uri.parse("https://shopping-api.deta.dev/products/all"),
+      );
 
-  Map<int, int> get productsInFavourites {
+      final Map<String, dynamic> body = convert.jsonDecode(res.body);
+      final data = body["data"] as List<dynamic>;
+      _availableProducts.clear();
+      for (var product in data) {
+        _availableProducts.add(Product(
+          category: Category.all,
+          id: product["product_id"],
+          name: product["name"],
+          price: product["price"],
+          imageUrl: product["image"],
+          isFeatured: false,
+        ));
+      }
+      notifyListeners();
+    } catch (err) {
+      log(err.toString());
+    }
+  }
+
+  // The IDs and quantities of products currently in the favourites.
+  final _productsInFavourites = <String, int>{};
+
+  Map<String, int> get productsInFavourites {
     return Map.from(_productsInFavourites);
   }
 
@@ -85,7 +113,7 @@ class AppStateModel extends foundation.ChangeNotifier {
   }
 
   // Adds a product to the cart.
-  void addProductToCart(int productId) {
+  void addProductToCart(String productId) {
     if (!_productsInCart.containsKey(productId)) {
       _productsInCart[productId] = 1;
     } else {
@@ -96,7 +124,7 @@ class AppStateModel extends foundation.ChangeNotifier {
   }
 
   // Adds a product to favourites.
-  void addProductToFavourites(int productId) {
+  void addProductToFavourites(String productId) {
     if (!_productsInFavourites.containsKey(productId)) {
       _productsInFavourites[productId] = 1;
     }
@@ -105,7 +133,7 @@ class AppStateModel extends foundation.ChangeNotifier {
   }
 
   // Removes an item from the cart.
-  void removeItemFromCart(int productId) {
+  void removeItemFromCart(String productId) {
     if (_productsInCart.containsKey(productId)) {
       if (_productsInCart[productId] == 1) {
         _productsInCart.remove(productId);
@@ -118,7 +146,7 @@ class AppStateModel extends foundation.ChangeNotifier {
   }
 
 // Removes an item from the favourites.
-  void removeItemFromFavourites(int productId) {
+  void removeItemFromFavourites(String productId) {
     if (_productsInFavourites.containsKey(productId)) {
       if (_productsInFavourites[productId] == 1) {
         _productsInFavourites.remove(productId);
@@ -129,7 +157,7 @@ class AppStateModel extends foundation.ChangeNotifier {
   }
 
   // Returns the Product instance matching the provided id.
-  Product getProductById(int id) {
+  Product getProductById(String id) {
     return _availableProducts.firstWhere((p) => p.id == id);
   }
 
@@ -146,10 +174,6 @@ class AppStateModel extends foundation.ChangeNotifier {
   }
 
   // Loads the list of available products from the repo.
-  void loadProducts() {
-    _availableProducts = ProductsRepository.loadProducts(Category.all);
-    notifyListeners();
-  }
 
   void setCategory(Category newCategory) {
     _selectedCategory = newCategory;

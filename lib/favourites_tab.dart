@@ -90,9 +90,8 @@ class FavouriteItem extends StatelessWidget {
           children: <Widget>[
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
-              child: Image.asset(
-                product.assetName,
-                package: product.assetPackage,
+              child: Image.network(
+                product.imageUrl,
                 fit: BoxFit.cover,
                 width: 40,
                 height: 40,
